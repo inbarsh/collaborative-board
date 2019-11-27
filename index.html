@@ -1,0 +1,224 @@
+<html>
+    <head>
+        <script src="js/jquery.js"></script>
+        <script src="js/socket.io.js"></script>
+        <style>
+            * {
+              box-sizing: border-box;
+            }
+            .grid-container {
+                display: grid;
+                grid-template-columns: auto auto auto auto;
+                padding: 10px;
+            }
+                .grid-item {
+                padding: 10px;
+                text-align: center;
+            }
+            body {
+              font-family: Arial, Helvetica, sans-serif;
+            }
+
+            ul {
+                color: white;
+            }
+
+            ul li::before {
+                content: "\2022";
+                color: white;
+            }
+
+            /* Style the header */
+            header {
+              background-image: linear-gradient(to right, red,orange,yellow,green,blue,indigo,violet);
+              padding: 0px;
+              text-align: center;
+              color: rgb(248, 216, 157);
+              font-size: 3em;
+            }
+
+            /* Container for flexboxes */
+            section {
+              display: -webkit-flex;
+              display: flex;
+            }
+
+            /* Style the navigation menu */
+            nav {
+              -webkit-flex: 1;
+              -ms-flex: 1;
+              flex: 1;
+              background: #ccc;
+              padding: 20px;
+            }
+
+            /* Style the list inside the menu */
+            nav ul {
+              list-style-type: none;
+              padding: 0;
+            }
+
+            /* Style the content */
+            article {
+              -webkit-flex: 3;
+              -ms-flex: 3;
+              flex: 3;
+              background-color: #f1f1f1;
+              padding: 10px;
+            }
+
+            /* Responsive layout - makes the menu and the content (inside the section) sit on top of each other instead of next to each other */
+            @media (max-width: 200px) {
+              section {
+                -webkit-flex-direction: column;
+                flex-direction: column;
+              }
+            }
+        </style>
+    </head>
+    <body data-rsssl=1>
+        <header>
+            <h1>Collaborative Board</h1>
+        </header>
+        <p id="message"></p>
+        <section>
+            <nav>
+                <ul>
+                    <script>
+                        var circle = "circle";
+                        var square = "square";
+                        var triangle = "triangle";                    
+                    </script>
+                    <button type="button" onclick="return sendShape(circle);">Circle</button>
+                    <button type="button" onclick="return sendShape(square);">Squre</button>
+                    <button type="button" onclick="return sendShape(triangle);">Triangle</button>
+                </ul>
+            </nav>
+            <article>
+                    <ul>
+                        <div class="grid-container">
+                            <div class="grid-item">
+                                <canvas id="myCanvas1" width="200" height="200"></canvas>
+                            </div>
+                            <div class="grid-item">
+                                <canvas id="myCanvas2" width="200" height="200"></canvas>
+                            </div>
+                            <div class="grid-item">
+                                <canvas id="myCanvas3" width="200" height="200"></canvas>
+                            </div>
+                            <div class="grid-item">
+                                <canvas id="myCanvas4" width="200" height="200"></canvas>
+                            </div>
+                            <div class="grid-item">
+                                <canvas id="myCanvas5" width="200" height="200"></canvas>
+                            </div>
+                            <div class="grid-item">
+                                <canvas id="myCanvas6" width="200" height="200"></canvas>
+                            </div>
+                            <div class="grid-item">
+                                <canvas id="myCanvas7" width="200" height="200"></canvas>
+                            </div>
+                            <div class="grid-item">
+                                <canvas id="myCanvas8" width="200" height="200"></canvas>
+                            </div>
+                            <div class="grid-item">
+                                <canvas id="myCanvas9" width="200" height="200"></canvas>
+                            </div>
+                            <div class="grid-item">
+                                <canvas id="myCanvas10" width="200" height="200"></canvas>
+                            </div>
+                            <div class="grid-item">
+                                <canvas id="myCanvas11" width="200" height="200"></canvas>
+                            </div>
+                            <div class="grid-item">
+                                <canvas id="myCanvas12" width="200" height="200"></canvas>
+                            </div>
+                        </div>
+                        
+                    </ul>
+            </article>
+        </section>
+
+        <script>
+            document.getElementById("message").innerHTML = "Let's Draw!";
+            var server = "http://localhost:3000";
+            var io = io(server);
+
+            var gridItem = 0
+            function sendShape(shape) {
+                    // sending message from client
+                    io.emit("new_shape", shape);
+            }
+            function drawShape(shape) {
+                gridItem = gridItem + 1;
+                myCanvas = 'myCanvas'.concat(gridItem.toString());
+                if (document.getElementById(myCanvas) != null) {
+                    var canvas = document.getElementById(myCanvas);
+                    var context = canvas.getContext('2d');
+                    var centerX = canvas.width / 2;
+                    var centerY = canvas.height / 2;
+                    var radius = 70
+                    context.beginPath();
+
+                    if (shape== "circle") {
+                        context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+                        context.fillStyle = 'green';
+                    }
+                    else if (shape== "square") {
+                        context.rect(centerX, centerY, radius, radius);
+                        context.fillStyle = 'yellow';
+                    }
+                    else if (shape== "triangle") {
+                        centerX = canvas.width / 4;
+                        centerY = canvas.height / 4;
+                        context.moveTo(centerX, centerY);
+                        context.lineTo(centerX, centerX-50);
+                        context.lineTo(centerX-50, centerX-50);
+                        context.fillStyle = "#FFCC00";
+                    }
+                    context.fill();
+                    context.stroke();
+                }
+                else {
+                    document.getElementById("message").innerHTML = "Sorry, Can't draw more shapes to screen today";
+                }
+            }   
+
+            // client will listen from server
+            io.on("new_shape", function (data) {
+                // display shape
+                console.log("Server says", data);
+                // creates a new DOM element for li tag
+                var li = document.createElement("li");
+                // show shape in li item
+                li.innerHTML = data.shape;
+                drawShape(data.shape);
+                // append the shape at the end of list
+                var shapes = document.getElementById("shapes");
+                shapes.appendChild(li);
+            });
+
+            $.ajax({
+                url: server + "/get_shapes",
+                method: "GET",
+                success: function (response) {
+                    console.log(response);
+                    var shapes = document.getElementById("shapes");
+                    // parse JSON to javascript object
+                    var data = JSON.parse(response);
+                    for (var a = 0; a < data.length; a++) {
+                        // creates new DOM element
+                        var li = document.createElement("li");
+                        // add shape content as HTML
+                        li.innerHTML = data[a].shape;
+                        drawShape(data[a].shape);
+                        // append at the end of list
+                        shapes.appendChild(li);
+		}
+	}
+});
+        </script>
+        <!--list where all shapes will be displayed-->
+        <ul id="shapes"></ul>
+    </body>
+</html> 
